@@ -4,17 +4,20 @@
  *  Created on: Nov 26, 2024
  *      Author: engin
  */
+// UART settings
 #include "main.h"
 extern UART_HandleTypeDef huart3; // GNSS
 
 #ifndef INC_GPS_H_
 #define INC_GPS_H_
 
-
+// Debug mode settings
 #define GPS_DEBUG	0
 #define	GPS_USART	&huart3
 #define GPSBUFSIZE  128       // GPS buffer size
 
+// GPS data structure -> GGA, RMC, GLL, VTG
+// Save GPS-related data such as latitude, longitude, and altitude
 typedef struct{
 
     // calculated values

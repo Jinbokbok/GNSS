@@ -28,30 +28,64 @@ void GPS_print(char *data){
 }
 #endif
 
+// GPS RESET -> uart start
 void GPS_Init()
 {
 	HAL_UART_Receive_IT(GPS_USART, &rx_data, 1);
 }
 
+// Data recieving,Saving buffer
+// Receive full sentence, Validate and parse
+//void GPS_UART_CallBack(){
+//	if (rx_data != '\n' && rx_index < sizeof(rx_buffer)) {
+//		rx_buffer[rx_index++] = rx_data;
+//		//printf("out");
+//	} else {
+//
+//		#if (GPS_DEBUG == 1)
+//		GPS_print((char*)rx_buffer);
+//		#endif
+//
+//		if(GPS_validate((char*) rx_buffer))
+//			GPS_parse((char*) rx_buffer);
+//		rx_index = 0;
+//		memset(rx_buffer, 0, sizeof(rx_buffer));
+//	}
+//	HAL_UART_Receive_IT(GPS_USART, &rx_data, 1);
+//}
 
-void GPS_UART_CallBack(){
-	if (rx_data != '\n' && rx_index < sizeof(rx_buffer)) {
-		rx_buffer[rx_index++] = rx_data;
-	} else {
 
-		#if (GPS_DEBUG == 1)
-		GPS_print((char*)rx_buffer);
-		#endif
+void GPS_UART_CallBack() {
+    if (rx_data != '\n' && rx_index < sizeof(rx_buffer)) {
+        rx_buffer[rx_index++] = rx_data;
+        printf("Received character: %c\r\n", rx_data); // 각 문자 수신 시 출력
+    } else {
+        printf("End of line or buffer full\r\n"); // 줄 끝이나 버퍼 가득 참
 
-		if(GPS_validate((char*) rx_buffer))
-			GPS_parse((char*) rx_buffer);
-		rx_index = 0;
-		memset(rx_buffer, 0, sizeof(rx_buffer));
-	}
-	HAL_UART_Receive_IT(GPS_USART, &rx_data, 1);
+        #if (GPS_DEBUG == 1)
+        GPS_print((char*)rx_buffer);
+        #endif
+
+        if(GPS_validate((char*) rx_buffer)) {
+            printf("Valid NMEA sentence received\r\n");
+            GPS_parse((char*) rx_buffer);
+        } else {
+            printf("Invalid NMEA sentence\r\n");
+        }
+
+        printf("Received data: %s\r\n", rx_buffer); // 전체 수신 데이터 출력
+
+        rx_index = 0;
+        memset(rx_buffer, 0, sizeof(rx_buffer));
+    }
+
+    HAL_UART_Receive_IT(GPS_USART, &rx_data, 1);
+    printf("Ready for next character\r\n"); // 다음 문자 수신 준비
 }
 
 
+// NMEA sentence validation
+// checksum calculation, Verifying the integrity of NMEA sentences
 int GPS_validate(char *nmeastr){
     char check[3];
     char checkcalcstr[3];
@@ -90,6 +124,8 @@ int GPS_validate(char *nmeastr){
         && (checkcalcstr[1] == check[1])) ? 1 : 0 ;
 }
 
+// NMEA sentence parsing
+// Parse the sentence, save it in the GPS structure
 void GPS_parse(char *GPSstrParse){
     if(!strncmp(GPSstrParse, "$GPGGA", 6)){
     	if (sscanf(GPSstrParse, "$GPGGA,%f,%f,%c,%f,%c,%d,%d,%f,%f,%c", &GPS.utc_time, &GPS.nmea_latitude, &GPS.ns, &GPS.nmea_longitude, &GPS.ew, &GPS.lock, &GPS.satelites, &GPS.hdop, &GPS.msl_altitude, &GPS.msl_units) >= 1){
@@ -113,6 +149,7 @@ void GPS_parse(char *GPSstrParse){
     }
 }
 
+// Convert NMEA coordinates to decimal (10진수)
 float GPS_nmea_to_dec(float deg_coord, char nsew) {
     int degree = (int)(deg_coord/100);
     float minutes = deg_coord - degree*100;

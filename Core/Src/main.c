@@ -205,7 +205,10 @@ void processCanMessages(void);								// Rx FIFO0 CAN message
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) // GNSS
 {
-	if(huart == &huart3) GPS_UART_CallBack();
+	if(huart == &huart3)
+		printf("hey!!");
+		GPS_UART_CallBack();
+		printf("oh!!");
 }
 
 
@@ -225,7 +228,10 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+
+
+
+	HAL_Init();
 
   /* USER CODE BEGIN Init */
 
